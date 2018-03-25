@@ -1,13 +1,22 @@
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.ForkJoinPool;
+
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
+import javafx.scene.control.cell.ProgressBarTableCell;
+import javafx.stage.*;
 
 public class MainWindowController {
 
@@ -18,13 +27,13 @@ public class MainWindowController {
     private URL location;
 
     @FXML
-    private TableView<?> filesTableView;
+    private TableView<ImageProcessingJob> filesTableView;
 
     @FXML
     private TableColumn<?, ?> noColumn;
 
     @FXML
-    private TableColumn<?, ?> filenameColumn;
+    private TableColumn<ImageProcessingJob, String> filenameColumn;
 
     @FXML
     private TableColumn<?, ?> typeColumn;
@@ -33,47 +42,60 @@ public class MainWindowController {
     private TableColumn<?, ?> sizeColumn;
 
     @FXML
-    private TableColumn<?, ?> progressColumn;
+    private TableColumn<ImageProcessingJob, Double> progressColumn;
 
     @FXML
-    private TableColumn<?, ?> statusColumn;
+    private TableColumn<ImageProcessingJob, String> statusColumn;
 
     @FXML
     private Button selectFilesButton;
 
-    @FXML
-    private Button selectTargetDirectoryButton;
 
     @FXML
     private Button convertButton;
-
-    @FXML
-    private Label outputDirectoryLabel;
-    private File targetDirectory;
+    private ObservableList<ImageProcessingJob> jobs;
+    private Config config;
 
     @FXML
     void convertButtonOnAction(ActionEvent event) {
-        if(targetDirectory == null) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("You have to specify output directory first");
-            alert.setTitle("Output dir is not specified");
-            alert.show();
+        Stage configWindowPrimaryStage = new Stage();
+        FXMLLoader configWindowLoader = new FXMLLoader(getClass().getResource("ConfigWindow.fxml"));
+        ConfigWindowController configWindowController = configWindowLoader.getController();
+        Parent configWindowRoot = null;
+        try {
+            configWindowRoot = configWindowLoader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
+        Scene scene = new Scene(configWindowRoot);
+        configWindowPrimaryStage.setTitle("Settings");
+        configWindowPrimaryStage.setScene(scene);
+        configWindowPrimaryStage.initStyle(StageStyle.UTILITY);
+        configWindowPrimaryStage.setResizable(false);
+        configWindowPrimaryStage.initModality(Modality.APPLICATION_MODAL);
+        configWindowController.setConfigObject(config);
+        configWindowPrimaryStage.showAndWait();
+        if(!config.isConfigSet()){
+            return;
+        }
+        new Thread(this::convert).start();
     }
 
     @FXML
     void selectFilesButtonOnAction(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JPG images", "*.jpg"));
-        List<File> selectedFile = fileChooser.showOpenMultipleDialog(null);
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(((Node)event.getSource()).getScene().getWindow());
+        if(selectedFiles == null) {
+            return;
+        }
+        selectedFiles.forEach(file -> jobs.add(new ImageProcessingJob(file)));
     }
 
-    @FXML
-    void selectTargetDirectoryButtonOnAction(ActionEvent event) {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        targetDirectory = directoryChooser.showDialog(null);
-        outputDirectoryLabel.setText(targetDirectory == null ? "Unspecified output dir" : targetDirectory.getPath());
+
+    public MainWindowController() {
+        this.jobs = null;
+        config = new Config();
     }
 
     @FXML
@@ -86,9 +108,24 @@ public class MainWindowController {
         assert progressColumn != null : "fx:id=\"progressColumn\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert statusColumn != null : "fx:id=\"statusColumn\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert selectFilesButton != null : "fx:id=\"selectFilesButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert selectTargetDirectoryButton != null : "fx:id=\"selectTargetDirectoryButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
         assert convertButton != null : "fx:id=\"convertButton\" was not injected: check your FXML file 'MainWindow.fxml'.";
-        assert outputDirectoryLabel != null : "fx:id=\"outputDirectoryLabel\" was not injected: check your FXML file 'MainWindow.fxml'.";
+        filenameColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getFile().getName()));
+        statusColumn.setCellValueFactory(p -> p.getValue().statusProperty());
+        progressColumn.setCellFactory(ProgressBarTableCell.<ImageProcessingJob>forTableColumn()); // What's that?
+        progressColumn.setCellValueFactory(p->p.getValue().progressProperty().asObject());
+        jobs = FXCollections.observableArrayList();
+        filesTableView.setItems(jobs);
 
+
+
+    }
+
+
+    void convert(){
+        ForkJoinPool pool;
+        if(config.getThreadNumber() > 0){
+            pool = new ForkJoinPool(config.getThreadNumber());
+        }
+        jobs.parallelStream().forEach(job -> job.toGrayscale(config.getOutputDir()));
     }
 }

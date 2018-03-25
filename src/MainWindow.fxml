@@ -30,9 +30,7 @@
       <ToolBar prefHeight="40.0" prefWidth="200.0" StackPane.alignment="TOP_CENTER">
         <items>
           <Button fx:id="selectFilesButton" mnemonicParsing="false" onAction="#selectFilesButtonOnAction" text="Select files" />
-            <Button fx:id="selectTargetDirectoryButton" layoutX="10.0" layoutY="11.0" mnemonicParsing="false" onAction="#selectTargetDirectoryButtonOnAction" text="Select output directory" />
             <Button fx:id="convertButton" layoutX="10.0" layoutY="11.0" mnemonicParsing="false" onAction="#convertButtonOnAction" text="Convert" />
-            <Label fx:id="outputDirectoryLabel" text="Ouputdirectory" />
         </items>
       </ToolBar>
    </children>
