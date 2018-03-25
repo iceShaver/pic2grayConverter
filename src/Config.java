@@ -3,7 +3,6 @@ import java.io.File;
 public class Config {
     private int threadNumber;
     private File outputDir;
-    private boolean isConfigSet;
 
     public int getThreadNumber() {
         return threadNumber;
@@ -21,11 +20,7 @@ public class Config {
         this.outputDir = outputDir;
     }
 
-    public boolean isConfigSet() {
-        return isConfigSet;
-    }
-
-    public void setConfigSet(boolean configSet) {
-        isConfigSet = configSet;
+    public boolean isSet(){
+        return outputDir != null;
     }
 }

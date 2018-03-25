@@ -60,33 +60,35 @@ public class MainWindowController {
     void convertButtonOnAction(ActionEvent event) {
         Stage configWindowPrimaryStage = new Stage();
         FXMLLoader configWindowLoader = new FXMLLoader(getClass().getResource("ConfigWindow.fxml"));
-        ConfigWindowController configWindowController = configWindowLoader.getController();
-        Parent configWindowRoot = null;
         try {
-            configWindowRoot = configWindowLoader.load();
+            Parent configWindowRoot = configWindowLoader.load();
+            ConfigWindowController configWindowController = configWindowLoader.getController();
+            Scene scene = new Scene(configWindowRoot);
+            configWindowPrimaryStage.setTitle("Settings");
+            configWindowPrimaryStage.setScene(scene);
+            configWindowPrimaryStage.initStyle(StageStyle.UTILITY);
+            configWindowPrimaryStage.setResizable(false);
+            configWindowPrimaryStage.initModality(Modality.APPLICATION_MODAL);
+            configWindowController.setConfigObject(config);
+            configWindowPrimaryStage.showAndWait();
+            if (!config.isSet()) {
+                return;
+            }
+            new Thread(this::startConversion).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Scene scene = new Scene(configWindowRoot);
-        configWindowPrimaryStage.setTitle("Settings");
-        configWindowPrimaryStage.setScene(scene);
-        configWindowPrimaryStage.initStyle(StageStyle.UTILITY);
-        configWindowPrimaryStage.setResizable(false);
-        configWindowPrimaryStage.initModality(Modality.APPLICATION_MODAL);
-        configWindowController.setConfigObject(config);
-        configWindowPrimaryStage.showAndWait();
-        if(!config.isConfigSet()){
-            return;
-        }
-        new Thread(this::convert).start();
+        //new Thread(this::startConversion).start();
+        startConversion();
+
     }
 
     @FXML
     void selectFilesButtonOnAction(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JPG images", "*.jpg"));
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(((Node)event.getSource()).getScene().getWindow());
-        if(selectedFiles == null) {
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(((Node) event.getSource()).getScene().getWindow());
+        if (selectedFiles == null) {
             return;
         }
         selectedFiles.forEach(file -> jobs.add(new ImageProcessingJob(file)));
@@ -112,20 +114,14 @@ public class MainWindowController {
         filenameColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getFile().getName()));
         statusColumn.setCellValueFactory(p -> p.getValue().statusProperty());
         progressColumn.setCellFactory(ProgressBarTableCell.<ImageProcessingJob>forTableColumn()); // What's that?
-        progressColumn.setCellValueFactory(p->p.getValue().progressProperty().asObject());
+        progressColumn.setCellValueFactory(p -> p.getValue().progressProperty().asObject());
         jobs = FXCollections.observableArrayList();
         filesTableView.setItems(jobs);
-
-
-
     }
 
 
-    void convert(){
-        ForkJoinPool pool;
-        if(config.getThreadNumber() > 0){
-            pool = new ForkJoinPool(config.getThreadNumber());
-        }
-        jobs.parallelStream().forEach(job -> job.toGrayscale(config.getOutputDir()));
+    void startConversion() {
+        ForkJoinPool myPool = new ForkJoinPool(config.getThreadNumber());
+        myPool.submit(()->jobs.parallelStream().forEach(job->job.toGrayscale(config.getOutputDir())));
     }
 }

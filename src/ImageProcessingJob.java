@@ -56,7 +56,8 @@ public class ImageProcessingJob {
     }
 
     public void toGrayscale(File outputDir) {
-        BufferedImage originalImage = null;
+        this.status.setValue(FileStatus.PROCESSING.toString());
+        BufferedImage originalImage;
         try {
             originalImage = ImageIO.read(file);
             BufferedImage resultImage = new BufferedImage(
@@ -69,14 +70,14 @@ public class ImageProcessingJob {
                     int luminosity = (int) (0.21 * color.getRed() + 0.71 * color.getGreen() + 0.07 * color.getBlue());
                     resultImage.setRGB(i, j, new Color(luminosity, luminosity, luminosity).getRGB());
                 }
-                double progress = (1.0 + i) / originalImage.getWidth();
-                Platform.runLater(()-> this.progress.set(progress));
+                double currentProgress = (1.0 + i) / originalImage.getWidth();
+                Platform.runLater(() -> this.progress.set(currentProgress));
             }
             Path outputPath = Paths.get(outputDir.getAbsolutePath(), file.getName());
             ImageIO.write(resultImage, "jpg", outputPath.toFile());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        this.status.setValue(FileStatus.FINISHED.toString());
     }
 }

@@ -36,7 +36,7 @@
               </rowConstraints>
                <children>
                   <Button fx:id="selectOutputDirButton" mnemonicParsing="false" onAction="#selectOutputDirButtonOnAction" text="Select" />
-                  <Label text="Choose output directory" wrapText="true" GridPane.rowIndex="1" />
+                  <Label fx:id="outputDirLabel" text="Choose output directory" wrapText="true" GridPane.rowIndex="1" />
                </children>
             </GridPane>
          </children>
@@ -44,6 +44,6 @@
             <Insets bottom="25.0" left="10.0" right="10.0" top="10.0" />
          </StackPane.margin>
       </GridPane>
-      <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Convert" StackPane.alignment="BOTTOM_CENTER" />
+      <Button fx:id="convertButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#convertButtonOnAction" text="Convert" StackPane.alignment="BOTTOM_CENTER" />
    </children>
 </StackPane>
