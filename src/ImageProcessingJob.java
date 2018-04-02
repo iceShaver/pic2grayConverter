@@ -2,6 +2,7 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.Task;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -10,10 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class ImageProcessingJob {
     private File file;
+    private File outputDir;
     private SimpleStringProperty status;
     private DoubleProperty progress;
 
@@ -43,6 +44,10 @@ public class ImageProcessingJob {
         this.status.set(status);
     }
 
+    public File getOutputDir() {
+        return outputDir;
+    }
+
     public double getProgress() {
         return progress.get();
     }
@@ -51,11 +56,18 @@ public class ImageProcessingJob {
         return progress;
     }
 
+    public void setOutputDir(File outputDir) {
+        this.outputDir = outputDir;
+    }
+
+
+
     public void setProgress(double progress) {
         this.progress.set(progress);
     }
 
-    public void toGrayscale(File outputDir) {
+    public void saveToGrayscale(File outputDir) {
+        System.out.println("Processing " + file.getName());
         this.status.setValue(FileStatus.PROCESSING.toString());
         BufferedImage originalImage;
         try {

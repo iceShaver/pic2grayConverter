@@ -1,15 +1,23 @@
 import java.io.File;
 
-public class Config {
-    private int threadNumber;
-    private File outputDir;
+enum ProcessingMode {
+    PARALLEL_USER,
+    PARALLEL_DEFAULT,
+    SEQUENTIAL
+}
 
-    public int getThreadNumber() {
-        return threadNumber;
+public class Config {
+    private int threadsNumber;
+    private File outputDir;
+    private ProcessingMode processingMode;
+    private boolean isSet;
+
+    public int getThreadsNumber() {
+        return threadsNumber;
     }
 
-    public void setThreadNumber(int threadNumber) {
-        this.threadNumber = threadNumber;
+    public void setThreadsNumber(int threadsNumber) {
+        this.threadsNumber = threadsNumber;
     }
 
     public File getOutputDir() {
@@ -20,7 +28,19 @@ public class Config {
         this.outputDir = outputDir;
     }
 
-    public boolean isSet(){
-        return outputDir != null;
+    public boolean isSet() {
+        return isSet;
+    }
+
+    public void setIsSet(boolean isSet) {
+        this.isSet = isSet;
+    }
+
+    public ProcessingMode getProcessingMode() {
+        return processingMode;
+    }
+
+    public void setProcessingMode(ProcessingMode processingMode) {
+        this.processingMode = processingMode;
     }
 }
