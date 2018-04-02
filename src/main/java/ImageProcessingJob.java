@@ -61,7 +61,6 @@ public class ImageProcessingJob {
     }
 
 
-
     public void setProgress(double progress) {
         this.progress.set(progress);
     }
